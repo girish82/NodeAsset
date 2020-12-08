@@ -26,24 +26,21 @@ userRouter.post('/users',async(req,res)=>{
 })
 
 userRouter.get('/users', async(req,res) => {
-
-
     const users = await User.find({});
+    const userEmail = users.map((user)=> user.email)
     try {
         if(users){
-            console.log('Inside get')
             return res.status(200).send({
-                users : users
+                users : userEmail
             })
         }else{
-            console.log('Inside get')
-            return res.status(404).send({
+            return res.status(400).send({
                 message:'No Users Found'
             })
         }
     }
     catch(e){
-        res.status(404).send({
+        res.status(400).send({
             message:'No Users Found'
         })
     }
@@ -55,7 +52,7 @@ userRouter.delete('/users/:id',async(req,res)=>{
     console.log(user)
     try {
         if(!user){
-            return res.status(404).send({
+            return res.status(400).send({
                 message:'No User found'
             })
         }else{
@@ -70,11 +67,13 @@ userRouter.delete('/users/:id',async(req,res)=>{
 })
 
 userRouter.post('/users/login',async(req,res)=>{
+    console.log(req.body);
     const user = await User.findOne({email:req.body.email});
     try {
         if(!user){
-            return res.status(404).send({
-                message:'Invalid User Credentials (email)'
+            console.log('inside user')
+            return res.status(400).send({
+                message:'Invalid User Credentials (email / password)'
             })
         }else{
             const validPassword = await bcrypt.compare(req.body.password,user.password);
@@ -83,19 +82,18 @@ userRouter.post('/users/login',async(req,res)=>{
                 return res.status(200).send({
                     user : {
                         email : user.email,
-                        token,
-                        expiresIn:'360'
+                        token
                     }
                 })
             }else{
-                return res.status(404).send({
-                    message: 'invalid user credentials (password)'
+                return res.status(400).send({
+                    message: 'invalid user credentials (email / password)'
                 })
             }
         }
     } catch (error) {
-        res.status(404).send({
-            message: e.message
+        res.status(400).send({
+            message: "Invalid User Credentials"
         })
     }
 })
