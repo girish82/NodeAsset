@@ -1,28 +1,37 @@
 const express = require('express');
 const Asset = require('../models/asset');
-const userRouter = new express.Router();
-// const auth = require('../middleware/auth')
+const assetRouter = new express.Router();
+const auth = require('../middleware/auth')
 
-userRouter.post('/assets',async(req,res)=> {
+assetRouter.post('/assets',async(req,res)=> {
 
     const asset = new Asset({
         soloData : {
             soloDataLink : req.body.soloData.soloDataLink,
-        author : req.body.author,
-        description : req.body.description,
-        owner : req.userId
-    })
+            tagNumber : req.body.soloData.tagNumber,
+            description : req.body.soloData.description,
+            material : req.body.soloData.material,
+            insulation : req.body.soloData.insulation,
+            valvemodal : req.body.soloData.valvemodal
+        },
+        commonData : {
+            commonDataLink : req.body.commonData.commonDataLink,
+            updateNumber : req.body.commonData.updateNumber,
+            commodity : req.body.commonData.commodity,
+            temperature : req.body.commonData.temperature
+
+        }});
     try {
-        if(!book){
-            return res.status(404).send({
-                message : 'Book details not correct'
+        if(!asset){
+            return res.status(400).send({
+                message : 'Asset details not correct'
             })
         }
         else{
-            await book.save();
+            await asset.save();
             return res.status(201).send({
-                message : 'Book added Successfully',
-                book
+                message : 'Asset added Successfully',
+                asset
             })
         }
     }
@@ -34,70 +43,38 @@ userRouter.post('/assets',async(req,res)=> {
     
 })
 
-userRouter.get('/books',async(req,res)=> {
+assetRouter.get('/assets',async(req,res)=> {
     
-    const books = await Book.find({});
+    const assets = await Asset.find({});
     try {
-        if(!books){
-            return res.status(404).send({
-                message:'No Books Found'
+        if(!!assets){
+            return res.status(200).send({
+                assets
             })
         }else{
-            return res.status(200).send({
-                books
+            return res.status(400).send({
+                message:'No Assets Found'
             })
         }
     } catch (error) {
-        res.status(404).send({
-            message:'No Books Found'
+        res.status(400).send({
+            message:'No Assets Found'
         })
     }
 })
 
-userRouter.get('/books/me',auth,async(req,res)=> {
-    
-    const userId = req.userId;
-    console.log(userId)
-    const books = await Book.find({'owner': userId});
-    console.log(books)
+assetRouter.delete('/assets/:id',auth,async(req,res)=> {
+    const asset = await Asset.findOne({_id:req.params.id});
+    console.log(asset)
     try {
-        if(!books){
-            return res.status(404).send({
-                message:'No Books Found for current user'
-            })
-        }else{
-            return res.status(200).send({
-                books
-            })
-        }
-    } catch (error) {
-        res.status(404).send({
-            message:'No Books Found'
-        })
-    }
-})
-
-userRouter.delete('/books/:id',auth,async(req,res)=> {
-    console.log(req.userId)
-    console.log(req.params.id)
-    const book = await Book.findOne({_id:req.params.id,'owner':req.userId})
-    console.log(book)
-    try {
-        if(!book){
-            const bookExist = await Book.findById({_id:req.params.id})
-            if(bookExist){
-                return res.status(404).send({
-                    message : 'Not Authorized to delete the Book'
-                })
-            }else{
-                return res.status(404).send({
-                    message : 'No Book Found.Delete cannot be done'
-                })
-            }
-        }else{
-            await Book.findByIdAndDelete({_id:req.params.id});
+        if(asset){
+            await Asset.findByIdAndDelete({_id:req.params.id});
             return res.status(200).send({
                 message : 'Deletion done successfully'
+            })
+        }else{
+            return res.status(200).send({
+                message : 'Asset Doesnot Exists'
             })
         }
     } catch (error) {
@@ -107,67 +84,60 @@ userRouter.delete('/books/:id',auth,async(req,res)=> {
     }
 })
 
-userRouter.get('/books/:id',auth,async(req,res)=> {
+assetRouter.get('/assets/:id',auth,async(req,res)=> {
     
-    const book = await Book.findOne({_id:req.params.id,'owner':req.userId})
-    console.log(book)
+    const asset = await Asset.findOne({_id:req.params.id})
+    console.log(asset)
     try {
-        if(!book){
-            const bookExist = await Book.findById({_id:req.params.id})
-            if(bookExist){
-                return res.status(404).send({
-                    message : 'Not Authorized to edit the Book',
-                    book : null
+        if(asset){
+                const assetExist = await Asset.findById({_id:req.params.id});
+                return res.status(200).send({
+                    message : 'Asset Found',
+                    assetExist
                 })
             }else{
-                return res.status(404).send({
-                    message : 'No Book Found.Edit cannot be done',
-                    book : null
+                return res.status(400).send({
+                    message : 'No Asset Found',
                 })
             }
-        }else{
-            await Book.findById({_id:req.params.id});
-            return res.status(200).send({
-                message : 'Edit can be done',
-                book
-            })
         }
-    } catch (error) {
-        res.status(200).send({
-            message : 'Error in Getting Book',
-            book: null
+    catch (error) {
+        res.status(404).send({
+            message : 'Error in Getting Asset',
         })
     }
 })
 
-userRouter.put('/books/:id',auth,async(req,res)=> {
+assetRouter.put('/assets/:id',auth,async(req,res)=> {
     
-    const book = await Book.findOne({_id:req.params.id,'owner':req.userId})
-    console.log(book)
+    const asset = await Asset.findOne({_id:req.params.id})
+    console.log(asset)
     try {
-        if(!book){
-            const bookExist = await Book.findById({_id:req.params.id})
-            if(bookExist){
-                return res.status(404).send({
-                    message : 'Not Authorized to edit the Book',
-                    book : null
-                })
-            }else{
-                return res.status(404).send({
-                    message : 'No Book Found.Edit cannot be done',
-                    book : null
-                })
-            }
-        }else{
-            const updateBook = {
-                title : req.body.title,
-                author : req.body.author,
-                description : req.body.description
-            }
-            await Book.findByIdAndUpdate({_id:req.params.id},updateBook);
+        if(asset){
+            const updateAsset = {
+                soloData : {
+                    soloDataLink : req.body.soloData.soloDataLink,
+                    tagNumber : req.body.soloData.tagNumber,
+                    description : req.body.soloData.description,
+                    material : req.body.soloData.material,
+                    insulation : req.body.soloData.insulation,
+                    valvemodal : req.body.soloData.valvemodal
+                },
+                commonData : {
+                    commonDataLink : req.body.commonData.commonDataLink,
+                    updateNumber : req.body.commonData.updateNumber,
+                    commodity : req.body.commonData.commodity,
+                    temperature : req.body.commonData.temperature
+        
+                }};
+            await Asset.findByIdAndUpdate({_id:req.params.id},updateAsset);
             return res.status(200).send({
                 message : 'Edit done successfully',
-                book : {...book,_id:req.params.id,owner:req.userId}
+                updateAsset
+            })
+        }else{
+            return res.status(400).send({
+                message : 'No Asset Found',
             })
         }
     } catch (error) {
@@ -177,4 +147,4 @@ userRouter.put('/books/:id',auth,async(req,res)=> {
     }
 })
 
-module.exports = userRouter;
+module.exports = assetRouter;
